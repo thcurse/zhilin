@@ -1,5 +1,6 @@
 target/
 /.local/
+/AGENTS.md
 !**/src/main/**/target/
 !**/src/test/**/target/
 
