@@ -1,0 +1,83 @@
+# 本机依赖统一归入 zhilin；已有数据卷通过明确名称复用。
+name: zhilin
+services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请提供数据库密码}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-zhilin}
+      TZ: Asia/Shanghai
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - /zhima-data/docker/mysql/conf:/etc/mysql/conf.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: "no"
+  redis:
+    image: redis
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "16380:6379"
+    volumes:
+      - redis-data:/data
+      - /zhima-data/docker/redis:/logs
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: "no"
+  rabbitmq:
+    image: rabbitmq:4.3.4-management
+    # RabbitMQ 数据与节点名关联；复用已有卷时保持原主机名。
+    hostname: ${RABBITMQ_HOSTNAME:-zhilin-rabbitmq}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-zhilin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?请提供消息队列密码}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: "no"
+  seaweedfs:
+    container_name: seaweedFS
+    image: chrislusf/seaweedfs:4.40
+    command:
+      - mini
+      - -dir=/data
+      - -bucket=zhilin-media,zhilin-media-test
+      - -webdav=false
+      - -admin.user=admin
+      - -admin.password=${OBJECT_STORAGE_ADMIN_PASSWORD:?请通过本机环境文件提供管理密码}
+    environment:
+      AWS_ACCESS_KEY_ID: ${OBJECT_STORAGE_ACCESS_KEY:?请提供对象存储访问标识}
+      AWS_SECRET_ACCESS_KEY: ${OBJECT_STORAGE_SECRET_KEY:?请提供对象存储访问密钥}
+    ports:
+      - "127.0.0.1:18333:8333"
+      - "127.0.0.1:12346:23646"
+    volumes:
+      - seaweedfs-data:/data
+    restart: unless-stopped
+volumes:
+  mysql-data:
+    external: true
+    name: zhima_mysql-data
+  redis-data:
+    external: true
+    name: zhima_redis-data
+  rabbitmq-data:
+    external: true
+    name: zhilin_rabbitmq-data
+  seaweedfs-data:
+    external: true
+    name: zhilin-storage_object-data

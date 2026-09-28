@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhilin.mapper.user.UserProfileMapper">
+    <!-- 只修改文字列，避免与头像上传并发时互相覆盖。 -->
+    <insert id="saveTextProfile">
+        INSERT INTO user_profile (user_id, nickname, bio, company, position, email, deleted)
+        VALUES (#{userProfileEntity.userId}, #{userProfileEntity.nickname}, #{userProfileEntity.bio},
+                #{userProfileEntity.company}, #{userProfileEntity.position}, #{userProfileEntity.email}, 0)
+        ON DUPLICATE KEY UPDATE
+            nickname = #{userProfileEntity.nickname}, bio = #{userProfileEntity.bio},
+            company = #{userProfileEntity.company}, position = #{userProfileEntity.position},
+            email = #{userProfileEntity.email}
+    </insert>
+    <!-- 首次上传可以创建资料，后续上传仅更新头像。 -->
+    <insert id="saveAvatar">
+        INSERT INTO user_profile (user_id, nickname, avatar_key, deleted)
+        VALUES (#{userId}, #{nickname}, #{avatarKey}, 0)
+        ON DUPLICATE KEY UPDATE avatar_key = #{avatarKey}
+    </insert>
+</mapper>

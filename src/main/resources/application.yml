@@ -1,0 +1,98 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
+  application:
+    name: zhilin
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3308/zhilin?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    hikari:
+      # 单位为毫秒，连接失败时尽快反馈，避免请求长时间等待。
+      connection-timeout: 5000
+      validation-timeout: 3000
+      maximum-pool-size: 10
+      minimum-idle: 1
+  sql:
+    init:
+      # 建库与后续业务 SQL 均显式执行，应用启动不会自动改表。
+      mode: never
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:16380}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: 3s
+      timeout: 3s
+      repositories:
+        enabled: false
+  profiles:
+    # 未显式指定环境时使用开发配置；可通过 SPRING_PROFILES_ACTIVE 覆盖。
+    default: dev
+  web:
+    resources:
+      # Knife4j 页面来自依赖中的静态资源；默认关闭，随开发文档一起开放。
+      add-mappings: false
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+
+zhilin:
+  storage:
+    endpoint: ${OBJECT_STORAGE_ENDPOINT:http://127.0.0.1:18333}
+    region: ${OBJECT_STORAGE_REGION:us-east-1}
+    bucket: ${OBJECT_STORAGE_BUCKET:zhilin-media}
+    access-key: ${OBJECT_STORAGE_ACCESS_KEY:}
+    secret-key: ${OBJECT_STORAGE_SECRET_KEY:}
+  auth:
+    secret: ${AUTH_JWT_SECRET:}
+    access-seconds: 900
+    refresh-seconds: 604800
+    cookie-secure: true
+  redis:
+    key-prefix: ${REDIS_KEY_PREFIX:zhilin:}
+
+server:
+  # 与旧项目的 8080 端口隔离，支持临时环境变量覆盖。
+  port: ${SERVER_PORT:8081}
+
+logging:
+  level:
+    root: INFO
+  charset:
+    console: UTF-8
+    file: UTF-8
+  file:
+    # 相对路径以进程工作目录为基准，启动时应位于项目根目录。
+    name: ${LOG_DIR:.local/logs}/zhilin.log
+  logback:
+    rollingpolicy:
+      file-name-pattern: "${LOG_DIR:.local/logs}/zhilin.%d{yyyy-MM-dd}.%i.log.gz"
+      max-file-size: 10MB
+      # 按天滚动，最多保留 7 天归档；归档总量超过上限时清理旧归档。
+      max-history: 7
+      total-size-cap: 100MB
+      clean-history-on-start: true
+
+# 文档默认关闭，仅在开发环境显式开启。
+springdoc:
+  api-docs:
+    enabled: false
+    # Knife4j 4.x 使用 OpenAPI 3.0，避免 3.1 的 Schema 差异影响展示。
+    version: OPENAPI_3_0
+  swagger-ui:
+    enabled: false
+  paths-to-match: /api/**
+  group-configs:
+    - group: zhilin
+      paths-to-match: /api/**
+  # 业务错误按具体接口声明，避免将全局处理器的方法推断为所有接口的响应。
+  override-with-generic-response: false

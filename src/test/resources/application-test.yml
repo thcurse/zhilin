@@ -1,0 +1,25 @@
+spring:
+  config:
+    # 测试只读取自己的本地配置，不导入开发环境密码文件。
+    import: optional:file:./.local/application-test.yml
+  datasource:
+    url: ${TEST_DB_URL:jdbc:mysql://127.0.0.1:3308/zhilin_test?characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${TEST_DB_USERNAME:root}
+    password: ${TEST_DB_PASSWORD:}
+  data:
+    redis:
+      host: ${TEST_REDIS_HOST:127.0.0.1}
+      port: ${TEST_REDIS_PORT:16380}
+      username: ${TEST_REDIS_USERNAME:}
+      password: ${TEST_REDIS_PASSWORD:}
+      database: ${TEST_REDIS_DATABASE:0}
+
+zhilin:
+  storage:
+    bucket: zhilin-media-test
+  auth:
+    # 只用于隔离测试，正式配置不提供默认密钥。
+    secret: test-only-signing-secret-never-use-in-deployment
+    cookie-secure: false
+  redis:
+    key-prefix: "zhilin:test:"

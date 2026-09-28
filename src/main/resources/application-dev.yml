@@ -1,0 +1,35 @@
+spring:
+  config:
+    # 仅开发环境加载本机连接信息，文件位于 Git 忽略目录。
+    import: optional:file:./.local/application-dev.yml
+  web:
+    resources:
+      add-mappings: true
+
+# 开发时显示项目自身的调试日志，第三方组件仍遵循公共 INFO 级别。
+logging:
+  level:
+    com.zhilin: DEBUG
+    # 账号 SQL 参数含密码摘要，不在开发日志中打印。
+    com.zhilin.mapper.auth: INFO
+    # 资料 SQL 参数包含本人邮箱，不记录到调试日志。
+    com.zhilin.mapper.user: INFO
+
+zhilin:
+  auth:
+    # 本机 HTTP 调试；HTTPS 环境不要覆盖公共配置的 true。
+    cookie-secure: false
+    allowed-origins:
+      - http://127.0.0.1:3301
+      - http://127.0.0.1:3302
+      - http://127.0.0.1:8081
+      - http://localhost:3301
+      - http://localhost:3302
+      - http://localhost:8081
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    # Knife4j 通过 springdoc 的 swagger-config 发现文档分组，此能力必须开启。
+    enabled: true
